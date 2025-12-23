@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MIAMIRESCUE — Trust & Compliance Experiment</title>
+  <meta name="description" content="Client-side behavioral experiment app" />
+  <style>
+    :root{
+      --bg:#0b0f17; --panel:#121a2a; --panel2:#0f1626; --text:#e9eefc;
+      --muted:#aab6d6; --accent:#6ea8fe; --accent2:#7ee0c7; --warn:#ffd166;
+      --danger:#ff6b6b; --ok:#52d273; --line:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:18px;
+      --tap:54px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:var(--sans);
+      background: radial-gradient(1200px 800px at 30% 10%, #162241 0%, var(--bg) 45%, #070a10 100%);
+      color:var(--text); line-height:1.4;
+    }
+    a{color:var(--accent)}
+    .wrap{max-width:980px; margin:0 auto; padding:18px 14px 80px}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:14px 14px; margin:10px 0 16px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+      position:sticky; top:10px; backdrop-filter: blur(10px);
+      z-index:10;
+    }
+    .brand{display:flex; flex-direction:column; gap:2px}
+    .brand .title{font-weight:800; letter-spacing:.4px}
+    .brand .sub{color:var(--muted); font-size:13px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px; border:1px solid var(--line);
+      background:rgba(0,0,0,.15); color:var(--muted); font-size:13px;
+      white-space:nowrap;
+    }
+    .grid{display:grid; gap:14px}
+    @media(min-width:860px){ .grid{grid-template-columns: 1.3fr .7fr;} }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.02));
+    }
+    .card .hd h2{margin:0; font-size:16px}
+    .card .hd p{margin:6px 0 0; color:var(--muted); font-size:13px}
+    .card .bd{padding:14px}
+    .banner{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:12px; border-radius:14px; border:1px dashed rgba(255,255,255,.18);
+      background:rgba(0,0,0,.18); color:var(--muted);
+      margin-bottom:12px;
+    }
+    .banner b{color:var(--text)}
+    .step{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:10px 12px; border-radius:14px; border:1px solid var(--line);
+      background:rgba(0,0,0,.12);
+    }
+    .step .k{color:var(--muted); font-size:12px}
+    .step .v{font-family:var(--mono); font-size:12px}
+    .scenario{
+      padding:12px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(110,168,254,.10), rgba(0,0,0,.10));
+      margin-bottom:12px;
+    }
+    .scenario h3{margin:0 0 6px; font-size:14px}
+    .scenario p{margin:0; color:var(--muted); font-size:13px}
+
+    .qtitle{font-size:18px; margin:0 0 10px}
+    .qmeta{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px}
+    .tag{padding:6px 10px; border-radius:999px; border:1px solid var(--line); font-size:12px; color:var(--muted); background:rgba(0,0,0,.14)}
+    .tag.ai{color:#cfe3ff; border-color:rgba(110,168,254,.35); background:rgba(110,168,254,.12)}
+    .tag.fb{color:#d7fff4; border-color:rgba(126,224,199,.35); background:rgba(126,224,199,.10)}
+    .tag.noFB{color:#ffe8b6; border-color:rgba(255,209,102,.35); background:rgba(255,209,102,.10)}
+
+    .options{display:grid; gap:10px; margin:12px 0}
+    .opt{
+      display:flex; gap:12px; align-items:flex-start;
+      padding:12px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      cursor:pointer;
+      min-height: var(--tap);
+      user-select:none;
+      transition: transform .05s ease, border-color .1s ease, background .1s ease;
+    }
+    .opt:hover{border-color:rgba(110,168,254,.45)}
+    .opt:active{transform:scale(.995)}
+    .opt input{margin-top:4px; transform:scale(1.15)}
+    .opt .lbl{display:flex; flex-direction:column; gap:2px}
+    .opt .lbl .t{font-weight:700}
+    .opt .lbl .d{color:var(--muted); font-size:13px}
+
+    .aiBox{
+      padding:12px; border-radius:14px;
+      border:1px solid rgba(110,168,254,.35);
+      background:linear-gradient(180deg, rgba(110,168,254,.16), rgba(0,0,0,.10));
+      margin:12px 0;
+    }
+    .aiBox .row{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px}
+    .aiBox .row .left{display:flex; align-items:center; gap:8px}
+    .aiBox .badge{font-family:var(--mono); font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.16); color:#cfe3ff; background:rgba(0,0,0,.18)}
+    .aiBox .framing{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .chip{
+      padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.18); color:var(--muted); font-size:12px;
+      cursor:pointer;
+    }
+    .chip[aria-pressed="true"]{border-color:rgba(110,168,254,.55); color:#eaf2ff; background:rgba(110,168,254,.14)}
+    .aiText{margin:8px 0 0; color:#eaf2ff; font-size:13px}
+    .aiText small{color:var(--muted)}
+    .divider{height:1px; background:var(--line); margin:14px 0}
+    .fbBox{
+      padding:12px; border-radius:14px;
+      border:1px solid rgba(126,224,199,.35);
+      background:linear-gradient(180deg, rgba(126,224,199,.14), rgba(0,0,0,.10));
+      margin-top:12px;
+    }
+    .fbBox h4{margin:0 0 6px; font-size:13px}
+    .fbBox p{margin:0; color:var(--muted); font-size:13px}
+
+    .rowBtns{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    button{
+      appearance:none; border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.18); color:var(--text);
+      border-radius:14px; padding:12px 14px; min-height: var(--tap);
+      cursor:pointer; font-weight:700;
+      transition: transform .05s ease, border-color .1s ease, background .1s ease;
+    }
+    button:hover{border-color:rgba(110,168,254,.45)}
+    button:active{transform:scale(.995)}
+    button.primary{
+      border-color:rgba(110,168,254,.55);
+      background:linear-gradient(180deg, rgba(110,168,254,.26), rgba(0,0,0,.18));
+    }
+    button.danger{
+      border-color:rgba(255,107,107,.45);
+      background:linear-gradient(180deg, rgba(255,107,107,.16), rgba(0,0,0,.18));
+    }
+    button:disabled{opacity:.5; cursor:not-allowed}
+    .small{font-size:12px; color:var(--muted)}
+    .sideList{display:grid; gap:10px}
+    .kv{
+      padding:12px; border-radius:14px; border:1px solid var(--line);
+      background:rgba(0,0,0,.14);
+    }
+    .kv .k{font-size:12px; color:var(--muted)}
+    .kv .v{margin-top:4px; font-family:var(--mono); font-size:12px; word-break:break-word}
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:16px; max-width:920px; width:calc(100% - 20px);
+      background:rgba(10,14,22,.85); border:1px solid rgba(255,255,255,.12);
+      border-radius:16px; padding:12px 14px; color:var(--text);
+      box-shadow:var(--shadow); display:none;
+      backdrop-filter: blur(10px);
+    }
+    .toast.show{display:block}
+    .toast .muted{color:var(--muted); font-size:13px}
+    .footer{
+      margin-top:16px; padding:12px; text-align:center; color:var(--muted); font-size:12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="title">MIAMIRESCUE — Trust & Compliance Study</div>
+        <div class="sub">Client-side • Offline after load • Content-configured</div>
+      </div>
+      <div class="pill" id="progressPill">Loading…</div>
+    </div>
+
+    <div class="grid">
+      <div class="card" id="mainCard">
+        <div class="hd">
+          <h2 id="viewTitle">Welcome</h2>
+          <p id="viewSubtitle">Please read instructions carefully.</p>
+        </div>
+        <div class="bd" id="main"></div>
+      </div>
+
+      <div class="card">
+        <div class="hd">
+          <h2>Session</h2>
+          <p>Stored locally in your browser. You can export at the end.</p>
+        </div>
+        <div class="bd">
+          <div class="sideList" id="side"></div>
+          <div class="divider"></div>
+          <div class="rowBtns">
+            <button id="btnExportJson">Export JSON</button>
+            <button id="btnExportCsv">Export CSV</button>
+            <button class="danger" id="btnReset">Reset</button>
+          </div>
+          <div class="small" style="margin-top:10px">
+            Tip: If deploying via GitHub Pages/Netlify, just upload this folder.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      © Experiment App • No external libraries • Offline-friendly
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div id="toastTitle" style="font-weight:800"></div>
+    <div class="muted" id="toastMsg"></div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
